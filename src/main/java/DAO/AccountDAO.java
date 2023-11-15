@@ -16,6 +16,33 @@ public class AccountDAO {
     private static final Logger logger = LoggerFactory.getLogger(AccountDAO.class);
 
     /**
+     * Retrieves an Account by the provided account_id.
+     * 
+     * @param account_id the id of the account.
+     * @return the account if one exists, null if none exists.
+     */
+    public Account getAccountById(int account_id) {
+        Connection conn = ConnectionUtil.getConnection();
+
+        try {
+            String query = "SELECT * FROM account WHERE account_id = ?";
+
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setInt(1, account_id);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return getAccountFromResultSet(rs);
+            }
+        } catch (SQLException ex) {
+            logger.error("getAccountById threw an excetpion, account_id: {}, message: {}", account_id, ex.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
      * Retrieves an Account by the provided username.
      * 
      * @param username the name of the account.
@@ -33,12 +60,7 @@ public class AccountDAO {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                Account account = new Account(
-                        rs.getInt("account_id"), 
-                        rs.getString("username"), 
-                        rs.getString("password")
-                    );
-                return account;
+                return getAccountFromResultSet(rs);
             }
         } catch (SQLException ex) {
             logger.error("getAccountByUsername threw an exception, username: {}, message: {}", username, ex.getMessage());
@@ -80,4 +102,18 @@ public class AccountDAO {
         return null;
     }
 
+    /**
+     * Helper method to extract the Account from the supplied ResultSet.
+     * 
+     * @param rs the ResultSet containing the account.
+     * @return the Account created from the supplied ResultSet.
+     * @throws SQLException
+     */
+    private Account getAccountFromResultSet(ResultSet rs) throws SQLException {
+        return new Account(
+            rs.getInt("account_id"), 
+            rs.getString("username"), 
+            rs.getString("password")
+        );
+    }
 }
