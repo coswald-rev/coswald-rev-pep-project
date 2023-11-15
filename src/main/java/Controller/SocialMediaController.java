@@ -6,17 +6,13 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import Model.Account;
+import Model.Message;
 import Service.AccountService;
 import Service.MessageService;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 
-/**
- * TODO: You will need to write your own endpoints and handlers for your controller. The endpoints you will need can be
- * found in readme.md as well as the test cases. You should
- * refer to prior mini-project labs and lecture materials for guidance on how a controller may be built.
- */
 public class SocialMediaController {
 
     private static final Logger logger = LoggerFactory.getLogger(SocialMediaController.class);
@@ -79,6 +75,7 @@ public class SocialMediaController {
 
         app.post("register", this::registerHandler);
         app.post("login", this::loginHandler);
+        app.post("messages", this::messageCreateHandler);
 
         return app;
     }
@@ -136,6 +133,34 @@ public class SocialMediaController {
             logger.error("loginHandler threw an exception, body: {}, message: {}", body, ex.getMessage());
 
             return context.status(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    /**
+     * Handler for POST /messages
+     * 
+     * @param context
+     * @return the request context
+     */
+    private Context messageCreateHandler(Context context) {
+        String body = context.body();
+        
+        try {
+            // Unmarshal the body.
+            Message message = objectMapper.readValue(body, Message.class);
+
+            // Create the message.
+            Message createdMessage = messageService.createMessage(message);
+            if (createdMessage == null) {
+                return context.status(HttpStatus.BAD_REQUEST);
+            }
+
+            // Success, return the new message.
+            return context.json(createdMessage);
+        } catch (Exception ex) {
+            logger.error("messageCreateHandler threw an exception, body: {}, message: {}", body, ex.getMessage());
+
+            return context.status(HttpStatus.BAD_REQUEST);
         }
     }
 }
