@@ -1,5 +1,8 @@
 package Controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +79,8 @@ public class SocialMediaController {
         app.post("register", this::registerHandler);
         app.post("login", this::loginHandler);
         app.post("messages", this::messageCreateHandler);
+
+        app.get("messages", this::allMessagesHandler);
 
         return app;
     }
@@ -161,6 +166,27 @@ public class SocialMediaController {
             logger.error("messageCreateHandler threw an exception, body: {}, message: {}", body, ex.getMessage());
 
             return context.status(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Handler for GET /messages
+     * 
+     * @param context
+     * @return the request context
+     */
+    private Context allMessagesHandler(Context context) {
+        try {
+            // Retrieve all the messages.
+            List<Message> messages = messageService.getAllMessages();
+
+            // Success, return the messages.
+            return context.json(messages);
+        } catch (Exception ex) {
+            logger.error("allMessagesHandler threw an exception, message: {}", ex.getMessage());
+
+            // On error, still 200 OK with an empty list.
+            return context.json(new ArrayList<Message>());
         }
     }
 }
