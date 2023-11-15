@@ -81,6 +81,7 @@ public class SocialMediaController {
         app.post("messages", this::messageCreateHandler);
 
         app.get("messages", this::allMessagesHandler);
+        app.get("messages/{message_id}", this::messageByIdHandler);
 
         return app;
     }
@@ -187,6 +188,36 @@ public class SocialMediaController {
 
             // On error, still 200 OK with an empty list.
             return context.json(new ArrayList<Message>());
+        }
+    }
+
+    /**
+     * Handler for GET /messages/{message_id}
+     * 
+     * @param context
+     * @return the request context
+     */
+    private Context messageByIdHandler(Context context) {
+        String message_id_str = context.pathParam("message_id");
+
+        try {
+            // parse the param to int.
+            int message_id = Integer.parseInt(message_id_str);
+
+            // Get the message.
+            Message message = messageService.getMessageById(message_id);
+            if (message == null) {
+                // On null, still 200 OK.
+                return context.status(HttpStatus.OK);
+            }
+
+            // Success, return the message.
+            return context.json(message);
+        } catch (Exception ex) {
+            logger.error("messageByIdHandler threw an exception, message_id_str: {}, message: {}", message_id_str, ex.getMessage());
+
+            // On error, still 200 OK.
+            return context.status(HttpStatus.OK);
         }
     }
 }
