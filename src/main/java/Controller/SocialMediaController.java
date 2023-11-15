@@ -83,6 +83,8 @@ public class SocialMediaController {
         app.get("messages", this::allMessagesHandler);
         app.get("messages/{message_id}", this::messageByIdHandler);
 
+        app.delete("messages/{message_id}", this::messageDeleteByIdHandler);
+
         return app;
     }
 
@@ -215,6 +217,36 @@ public class SocialMediaController {
             return context.json(message);
         } catch (Exception ex) {
             logger.error("messageByIdHandler threw an exception, message_id_str: {}, message: {}", message_id_str, ex.getMessage());
+
+            // On error, still 200 OK.
+            return context.status(HttpStatus.OK);
+        }
+    }
+
+    /**
+     * Handler for DELETE /messages/{message_id}
+     * 
+     * @param context
+     * @return the request context
+     */
+    private Context messageDeleteByIdHandler(Context context) {
+        String message_id_str = context.pathParam("message_id");
+
+        try {
+            // parse the param to int.
+            int message_id = Integer.parseInt(message_id_str);
+
+            // Delete the message.
+            Message deletedMessage = messageService.deleteMessageById(message_id);
+            if (deletedMessage == null) {
+                // On null, still 200 OK.
+                return context.status(HttpStatus.OK);
+            }
+
+            // Success, return the deleted message.
+            return context.json(deletedMessage);
+        } catch (Exception ex) {
+            logger.error("messageDeleteByIdHandler threw an exception, message_id_str: {}, message: {}", message_id_str, ex.getMessage());
 
             // On error, still 200 OK.
             return context.status(HttpStatus.OK);
