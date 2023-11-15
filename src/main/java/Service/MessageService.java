@@ -86,8 +86,8 @@ public class MessageService {
      *  0 < message_text.length < 255
      *  posted_by relates to an existing user
      * 
-     * @param message
-     * @return
+     * @param message the message to create.
+     * @return the new message or null if: a requirement was unmet, an error occurred.
      */
     public Message createMessage(Message message) {
         // Ensure message_text is valid.
@@ -103,6 +103,16 @@ public class MessageService {
         return messageDAO.insertMessage(message);
     }
 
+    /**
+     * Update a message by message id.
+     * Requirements:
+     *  message_text is not blank
+     *  0 < message_text.length < 255
+     * 
+     * @param message_text the new message text.
+     * @param message_id the id of the message.
+     * @return the updated message, null if: the message doesn't exist, message_text is invalid, an error occurred.
+     */
     public Message updateMessageById(String message_text, int message_id) {
         // Ensure the message exists.
         Message existingMessage = messageDAO.getMessageById(message_id);
@@ -115,7 +125,13 @@ public class MessageService {
             return null;
         }
 
-        return messageDAO.updateMessageById(message_text, message_id);
+        // Attempt the update.
+        if (!messageDAO.updateMessageById(message_text, message_id)) {
+            return null;
+        }
+
+        // Return the updated message.
+        return getMessageById(message_id);
     }
 
     /**

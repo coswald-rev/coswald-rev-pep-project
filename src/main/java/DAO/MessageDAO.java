@@ -137,9 +137,9 @@ public class MessageDAO {
      * 
      * @param message_text the new text of the message.
      * @param message_id the id of the message to update.
-     * @return the updated message if the update was successful, null if: something went wrong, message didn't exist
+     * @return true if the record was updated, false if: something went wrong, the message didn't exist, or no rows were affected.
      */
-    public Message updateMessageById(String message_text, int message_id) {
+    public boolean updateMessageById(String message_text, int message_id) {
         Connection conn = ConnectionUtil.getConnection();
 
         try {
@@ -149,17 +149,12 @@ public class MessageDAO {
             ps.setString(1, message_text);
             ps.setInt(2, message_id);
 
-            ps.executeUpdate();
-
-            ResultSet rs = ps.getResultSet();
-            if (rs.next()) {
-                return getMessageFromResultSet(rs);
-            }
+            return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             logger.error("updateMessageById threw an exception, message_text: {}, message_id: {}, message: {}", message_text, message_id, ex.getMessage());
         }
 
-        return null;
+        return false;
     }
 
     /**
