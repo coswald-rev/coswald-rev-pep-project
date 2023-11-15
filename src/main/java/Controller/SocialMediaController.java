@@ -85,6 +85,8 @@ public class SocialMediaController {
         app.get("messages", this::allMessagesHandler);
         app.get("messages/{message_id}", this::messageByIdHandler);
 
+        app.get("accounts/{account_id}/messages", this::messageByAccountIdHandler);
+
         app.delete("messages/{message_id}", this::messageDeleteByIdHandler);
 
         return app;
@@ -178,6 +180,39 @@ public class SocialMediaController {
     }
 
     /**
+     * Handler for PATCH /messages/{message_id}
+     * 
+     * @param context
+     * @return the request context
+     */
+    private Context messageUpdateHandler(Context context) {
+        String body = context.body();
+        String message_id_str = context.pathParam("message_id");
+
+        try {
+            // parse the param to int.
+            int message_id = Integer.parseInt(message_id_str);
+
+            // Unmarshal the body.
+            Message message = objectMapper.readValue(body, Message.class);
+
+            // Update the message.
+            Message updatedMessage = messageService.updateMessageById(message.getMessage_text(), message_id);
+            if (updatedMessage == null) {
+                return context.status(HttpStatus.BAD_REQUEST);
+            }
+
+            // Success, return the updated mesage.
+            return context.json(updatedMessage);
+        } catch (Exception ex) {
+            logger.error("messageUpdateHandler threw an exception, message_id_str: {}, body: {}, message: {}", message_id_str, body, ex.getMessage());
+
+            // On error, 400 BAD REQUEST (Should 500).
+            return context.status(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
      * Handler for GET /messages
      * 
      * @param context
@@ -229,6 +264,31 @@ public class SocialMediaController {
     }
 
     /**
+     * Handler for GET /accounts/{account_id}/messages
+     * @param context
+     * @return
+     */
+    private Context messageByAccountIdHandler(Context context) {
+        String account_id_str = context.pathParam("account_id");
+
+        try {
+            // parse the param to int.
+            int account_id = Integer.parseInt(account_id_str);
+
+            // Retrieve all the messages by account_id.
+            List<Message> messages = messageService.getAllMessagesByAccountId(account_id);
+
+            // Success, return the messages.
+            return context.json(messages);
+        } catch (Exception ex) {
+            logger.error("messageByAccountIdHandler threw an exception, account_id_str: {}, message: {}", account_id_str, ex.getMessage());
+
+            // On error, still 200 OK with an empty list.
+            return context.json(new ArrayList<Message>());
+        }
+    }
+
+    /**
      * Handler for DELETE /messages/{message_id}
      * 
      * @param context
@@ -255,39 +315,6 @@ public class SocialMediaController {
 
             // On error, still 200 OK.
             return context.status(HttpStatus.OK);
-        }
-    }
-
-    /**
-     * Handler for PATCH /messages/{message_id}
-     * 
-     * @param context
-     * @return the request context
-     */
-    private Context messageUpdateHandler(Context context) {
-        String body = context.body();
-        String message_id_str = context.pathParam("message_id");
-
-        try {
-            // parse the param to int.
-            int message_id = Integer.parseInt(message_id_str);
-
-            // Unmarshal the body.
-            Message message = objectMapper.readValue(body, Message.class);
-
-            // Update the message.
-            Message updatedMessage = messageService.updateMessageById(message.getMessage_text(), message_id);
-            if (updatedMessage == null) {
-                return context.status(HttpStatus.BAD_REQUEST);
-            }
-
-            // Success, return the updated mesage.
-            return context.json(updatedMessage);
-        } catch (Exception ex) {
-            logger.error("messageUpdateHandler threw an exception, message_id_str: {}, body: {}, message: {}", message_id_str, body, ex.getMessage());
-
-            // On error, 400 BAD REQUEST (Should 500).
-            return context.status(HttpStatus.BAD_REQUEST);
         }
     }
 }
