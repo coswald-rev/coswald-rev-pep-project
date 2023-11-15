@@ -43,8 +43,32 @@ public class MessageDAO {
         return messages;
     }
 
+    /**
+     * Retrieves all messages by account id.
+     * 
+     * @param account_id the account_id of the posts
+     * @return a list containing all the messages
+     */
     public List<Message> getAllMessagesByAccountId(int account_id) {
-        return null;
+        Connection conn = ConnectionUtil.getConnection();
+        List<Message> messages = new ArrayList<>();
+
+        try {
+            String query = "SELECT * FROM message WHERE posted_by = ?";
+
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setInt(1, account_id);
+
+            ResultSet rs = ps.executeQuery();
+
+            while(rs.next()) {
+                messages.add(getMessageFromResultSet(rs));
+            }
+        } catch (SQLException ex) {
+            logger.error("getAllMessagesByAccountId threw an exception, account_id: {}, message: {}", account_id, ex.getMessage());
+        }
+
+        return messages;
     }
 
     /**
