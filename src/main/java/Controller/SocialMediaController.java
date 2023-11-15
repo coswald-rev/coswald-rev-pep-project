@@ -78,6 +78,7 @@ public class SocialMediaController {
         // app.get("example-endpoint", this::exampleHandler);
 
         app.post("register", this::registerHandler);
+        app.post("login", this::loginHandler);
 
         return app;
     }
@@ -86,6 +87,7 @@ public class SocialMediaController {
      * Handler for POST /register
      * 
      * @param context
+     * @return the request context
      */
     private Context registerHandler(Context context) {
         String body = context.body();
@@ -109,5 +111,31 @@ public class SocialMediaController {
         }
     }
 
-    private void loginHandler(Context context) {}
+    /**
+     * Handler for POST /login
+     * 
+     * @param context
+     * @return the request context
+     */
+    private Context loginHandler(Context context) {
+        String body = context.body();
+
+        try {
+            // Unmarshal the body.
+            Account account = objectMapper.readValue(body, Account.class);
+
+            // Authenticate
+            Account authenticatedAccount = accountService.authenticate(account);
+            if (authenticatedAccount == null) {
+                return context.status(HttpStatus.UNAUTHORIZED);
+            }
+
+            // Success, return the authenticated account.
+            return context.json(authenticatedAccount);
+        } catch (Exception ex) {
+            logger.error("loginHandler threw an exception, body: {}, message: {}", body, ex.getMessage());
+
+            return context.status(HttpStatus.UNAUTHORIZED);
+        }
+    }
 }
